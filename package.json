@@ -13,6 +13,7 @@
     "axios": "^1.4.0",
     "child_process": "^1.0.2",
     "fluent-ffmpeg": "^2.1.2",
+    "got": "^13.0.0",
     "node-fetch": "^3.3.1",
     "node-telegram-bot-api": "^0.61.0",
     "tiktok-scraper": "^1.4.36",

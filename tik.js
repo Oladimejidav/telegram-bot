@@ -1,5 +1,5 @@
 const TelegramBot = require('node-telegram-bot-api');
-const TikTokScraper = require('tiktok-scraper');
+const axios = require('axios');
 
 // Replace 'YOUR_TELEGRAM_BOT_TOKEN' with your actual bot token
 const botToken = '6174249361:AAEfFbXDeACp93XVCIuAZ9iMlADRckVuAkY';
@@ -19,6 +19,7 @@ bot.on('message', async (msg) => {
       const soundURL = await extractSoundFromTikTok(messageText);
       bot.sendMessage(chatId, `Here's the sound from the TikTok video: ${soundURL}`);
     } catch (error) {
+      console.error('Error extracting sound:', error);
       bot.sendMessage(chatId, 'An error occurred while processing the TikTok video.');
     }
   } else {
@@ -28,10 +29,32 @@ bot.on('message', async (msg) => {
 
 async function extractSoundFromTikTok(videoURL) {
   try {
-    const videoMeta = await TikTokScraper.getVideoMeta(videoURL);
-    const soundURL = videoMeta.collector[0].music.playUrl;
+    const response = await axios.get(videoURL);
+    const htmlContent = response.data;
+    const soundURLMatch = htmlContent.match(/"playUrl":"(.*?)"/);
+
+    if (!soundURLMatch || !soundURLMatch[1]) {
+      throw new Error('Sound URL not found in TikTok video page.');
+    }
+
+    const soundURL = soundURLMatch[1].replace(/\\u0026/g, '&');
     return soundURL;
   } catch (error) {
     throw new Error('Failed to extract sound from the TikTok video.');
   }
 }
+
+// Handle Telegram bot errors
+bot.on('polling_error', (error) => {
+  console.error('Polling error:', error.message);
+});
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught exception:', error);
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled promise rejection:', reason);
+});
