@@ -1,45 +1,37 @@
 const TelegramBot = require('node-telegram-bot-api');
 const TikTokScraper = require('tiktok-scraper');
-const axios = require('axios');
-const fs = require('fs');
 
-// Replace 'YOUR_API_TOKEN' with your Telegram Bot API token
-const bot = new TelegramBot('6174249361:AAEfFbXDeACp93XVCIuAZ9iMlADRckVuAkY', { polling: true });
+// Replace 'YOUR_TELEGRAM_BOT_TOKEN' with your actual bot token
+const botToken = '6174249361:AAEfFbXDeACp93XVCIuAZ9iMlADRckVuAkY';
+const bot = new TelegramBot(botToken, { polling: true });
 
-bot.onText(/\/getaudio (.+)/, async (msg, match) => {
-  const tiktokUrl = match[1];
-  console.log('TikTok URL:', tiktokUrl);
+bot.onText(/\/start/, (msg) => {
+  const chatId = msg.chat.id;
+  bot.sendMessage(chatId, 'Send me a TikTok video URL, and I will extract the sound for you!');
+});
 
-  try {
-    // Scrape TikTok video metadata
-    console.log('Scraping TikTok metadata...');
-    const videoData = await TikTokScraper.getVideoMeta(tiktokUrl);
-    console.log('Video data:', videoData);
+bot.on('message', async (msg) => {
+  const chatId = msg.chat.id;
+  const messageText = msg.text;
 
-    // Get the audio URL from the video metadata
-    const audioUrl = videoData.collector[0].videoUrlNoWaterMark;
-    console.log('Audio URL:', audioUrl);
-
-    // Download the audio file
-    console.log('Downloading audio file...');
-    const response = await axios.get(audioUrl, { responseType: 'stream' });
-    const audioFilePath = 'audio.mp3';
-    const outputStream = fs.createWriteStream(audioFilePath);
-
-    response.data.pipe(outputStream);
-
-    outputStream.on('finish', () => {
-      // Send the audio file to the Telegram chat
-      console.log('Audio file downloaded. Sending to Telegram chat...');
-      bot.sendAudio(msg.chat.id, audioFilePath);
-    });
-  } catch (error) {
-    console.error('Error:', error);
+  if (messageText.startsWith('https://www.tiktok.com/') || messageText.startsWith('https://m.tiktok.com/')) {
+    try {
+      const soundURL = await extractSoundFromTikTok(messageText);
+      bot.sendMessage(chatId, `Here's the sound from the TikTok video: ${soundURL}`);
+    } catch (error) {
+      bot.sendMessage(chatId, 'An error occurred while processing the TikTok video.');
+    }
+  } else {
+    bot.sendMessage(chatId, 'Please provide a valid TikTok video URL.');
   }
 });
 
-bot.on('polling_error', (error) => {
-  console.error('Polling error:', error);
-});
-
-console.log('Bot is running...');
+async function extractSoundFromTikTok(videoURL) {
+  try {
+    const videoMeta = await TikTokScraper.getVideoMeta(videoURL);
+    const soundURL = videoMeta.collector[0].music.playUrl;
+    return soundURL;
+  } catch (error) {
+    throw new Error('Failed to extract sound from the TikTok video.');
+  }
+}
