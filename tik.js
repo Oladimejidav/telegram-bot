@@ -2,7 +2,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const TikTokScraper = require('tiktok-scraper');
 
 // Replace 'YOUR_TELEGRAM_BOT_TOKEN' with your actual bot token
-const botToken = '6174249361:AAEfFbXDeACp93XVCIuAZ9iMlADRckVuAkY';
+const botToken = 'API TOKEN';
 const bot = new TelegramBot(botToken, { polling: true });
 
 bot.onText(/\/start/, (msg) => {
