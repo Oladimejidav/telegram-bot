@@ -4,7 +4,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const fs = require('fs');
 
 // Replace 'YOUR_API_TOKEN' with your Telegram Bot API token
-const bot = new TelegramBot('6174249361:AAEfFbXDeACp93XVCIuAZ9iMlADRckVuAkY', { polling: true });
+const bot = new TelegramBot('API Token', { polling: true });
 
 bot.onText(/\/getaudio (.+)/, async (msg, match) => {
   const videoUrl = match[1];
